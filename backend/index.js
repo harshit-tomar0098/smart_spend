@@ -11,9 +11,13 @@ app.use(express.json());
 // Routes
 const authRoutes = require('./routes/auth');
 const transactionRoutes = require('./routes/transactions');
+const budgetRoutes = require('./routes/budgets');
+const predictionRoutes = require('./routes/predictions');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/transactions', transactionRoutes);
+app.use('/api/budgets', budgetRoutes);
+app.use('/api/predictions', predictionRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'SmartSpend API is running' });

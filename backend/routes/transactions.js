@@ -60,7 +60,7 @@ router.post('/', async (req, res) => {
         merchant,
         notes,
         is_recurring: is_recurring || false,
-        tags: tags || []
+        tags: tags ? (typeof tags === 'string' ? tags : JSON.stringify(tags)) : "[]"
       }
     });
 

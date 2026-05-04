@@ -1,9 +1,9 @@
 import React, { useContext } from 'react';
 import { 
   Wallet, LayoutDashboard, PlusCircle, FileText, PieChart as PieChartIcon, 
-  TrendingUp, BarChart3, Settings, Moon, Bell, User, X
+  TrendingUp, BarChart3, Settings, Moon, Sun, Bell, User, X
 } from 'lucide-react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 
 const NAV_ITEMS = [
@@ -55,6 +55,22 @@ const Sidebar = () => {
 
 const Header = ({ title }) => {
   const { logout } = useContext(AuthContext);
+  const navigate = useNavigate();
+  const [isDark, setIsDark] = React.useState(
+    typeof document !== 'undefined' && document.documentElement.classList.contains('dark')
+  );
+
+  const toggleDarkMode = () => {
+    if (isDark) {
+      document.documentElement.classList.remove('dark');
+      localStorage.theme = 'light';
+      setIsDark(false);
+    } else {
+      document.documentElement.classList.add('dark');
+      localStorage.theme = 'dark';
+      setIsDark(true);
+    }
+  };
 
   return (
     <header className="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800">
@@ -68,8 +84,11 @@ const Header = ({ title }) => {
           )}
         </div>
         <div className="flex items-center gap-4">
-          <button className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
-            <Moon className="w-5 h-5 text-slate-600" />
+          <button 
+            onClick={toggleDarkMode}
+            className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+          >
+            {isDark ? <Sun className="w-5 h-5 text-slate-400" /> : <Moon className="w-5 h-5 text-slate-600" />}
           </button>
           <div className="relative">
             <button className="relative p-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
@@ -78,7 +97,7 @@ const Header = ({ title }) => {
             </button>
           </div>
           <button 
-            onClick={logout}
+            onClick={() => navigate('/settings')}
             className="flex items-center gap-3 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-200"
           >
             <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
