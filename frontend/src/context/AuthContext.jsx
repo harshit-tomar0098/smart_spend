@@ -16,8 +16,7 @@ export const AuthProvider = ({ children }) => {
     if (token && storedUser) {
       setUser(JSON.parse(storedUser));
     } else {
-      // Mock user for testing without login
-      setUser({ id: 'dummy-id', name: 'Test User', email: 'test@example.com' });
+      setUser(null);
     }
     setLoading(false);
   }, []);

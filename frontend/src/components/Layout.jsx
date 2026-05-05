@@ -54,7 +54,7 @@ const Sidebar = () => {
 };
 
 const Header = ({ title }) => {
-  const { logout } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
   const [isDark, setIsDark] = React.useState(
     typeof document !== 'undefined' && document.documentElement.classList.contains('dark')
@@ -77,7 +77,7 @@ const Header = ({ title }) => {
       <div className="flex items-center justify-between px-8 py-4">
         <div className="flex-1">
           <h1 className="text-2xl font-bold text-slate-800 dark:text-white">{title}</h1>
-          {title === 'Dashboard' ? (
+          {title.startsWith('Welcome back') || title === 'Dashboard' ? (
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Here's your financial overview</p>
           ) : (
              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage your {title.toLowerCase()}</p>
@@ -103,7 +103,7 @@ const Header = ({ title }) => {
             <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
               <User className="w-5 h-5 text-white" />
             </div>
-            <span className="text-white font-medium">Profile</span>
+            <span className="text-white font-medium">{user?.name?.split(' ')[0] || 'Profile'}</span>
           </button>
         </div>
       </div>
@@ -113,6 +113,7 @@ const Header = ({ title }) => {
 
 const Layout = () => {
   const location = useLocation();
+  const { user } = useContext(AuthContext);
   const currentItem = NAV_ITEMS.find(item => item.path === location.pathname);
   const title = currentItem ? currentItem.label : 'Dashboard';
 
@@ -120,7 +121,7 @@ const Layout = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-950 dark:to-slate-900 transition-colors duration-300">
       <Sidebar />
       <div className="transition-all duration-300 ml-64">
-        <Header title={location.pathname === '/' ? `Welcome back, User` : title} />
+        <Header title={location.pathname === '/' ? `Welcome back, ${user?.name?.split(' ')[0] || 'User'}` : title} />
         <main className="p-8">
           <Outlet />
         </main>
