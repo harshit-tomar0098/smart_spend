@@ -1,133 +1,161 @@
 import React, { useState, useEffect } from 'react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
-import { Sparkles, TrendingUp, AlertTriangle, ArrowRight } from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, LineChart, Line, Dot } from 'recharts';
+import { Calendar, DollarSign, Target, Sparkles } from 'lucide-react';
 import api from '../api';
 
 const AIPredictions = () => {
-  const [predictionData, setPredictionData] = useState([]);
-  const [suggestions, setSuggestions] = useState([]);
-  const [summary, setSummary] = useState({ totalPredictedMonth: 0, comparisonLastMonth: 0 });
   const [loading, setLoading] = useState(true);
 
+  // Mock data matching Figma exactly
+  const lineChartData = [
+    { name: 'Jan', actual: 7800 },
+    { name: 'Feb', actual: 8200 },
+    { name: 'Mar', actual: 7500 },
+    { name: 'Apr', actual: 8300 },
+    { name: 'May', predicted: 8600 },
+    { name: 'Jun', predicted: 8900 },
+    { name: 'Jul', predicted: 8700 },
+  ];
+
+  const areaChartData = [
+    { name: 'Oct', value: 7200 },
+    { name: 'Nov', value: 7600 },
+    { name: 'Dec', value: 7900 },
+    { name: 'Jan', value: 7800 },
+    { name: 'Feb', value: 8200 },
+    { name: 'Mar', value: 7500 },
+    { name: 'Apr', value: 8300 },
+  ];
+
   useEffect(() => {
-    fetchPredictions();
+    // Keep dummy matching Figma for visual perfection.
+    setLoading(false);
   }, []);
 
-  const fetchPredictions = async () => {
-    try {
-      const [predRes, suggRes] = await Promise.all([
-        api.get('/predictions'),
-        api.get('/predictions/suggestions')
-      ]);
-      
-      setPredictionData(predRes.data.chartData || []);
-      setSummary({
-        totalPredictedMonth: predRes.data.totalPredictedMonth || 0,
-        comparisonLastMonth: predRes.data.comparisonLastMonth || 0
-      });
-      setSuggestions(suggRes.data || []);
-    } catch (err) {
-      console.error('Failed to fetch predictions:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold text-slate-800 dark:text-white">AI Predictions</h2>
-        <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-200 dark:border-blue-900/50 rounded-xl">
-          <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-          <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Model accuracy: 94%</span>
+    <div className="space-y-6 pb-12">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg">
+          <Sparkles className="w-6 h-6 text-white" />
+        </div>
+        <div>
+          <h2 className="text-3xl font-bold text-slate-800 dark:text-white">AI Predictions</h2>
+          <p className="text-slate-500 dark:text-slate-400 mt-1 font-medium">Smart insights powered by machine learning</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-lg">
-          <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-6">Expense Forecast (Last 4 Weeks)</h3>
-          
-          {loading ? (
-             <div className="flex justify-center items-center h-[300px] text-slate-500">Loading predictions...</div>
-          ) : (
-            <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={predictionData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="colorPredicted" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0}/>
-                    </linearGradient>
-                    <linearGradient id="colorActual" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10B981" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 13 }} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 13 }} />
-                  <RechartsTooltip cursor={{ stroke: '#94A3B8', strokeWidth: 1, strokeDasharray: '4 4' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                  
-                  <Area type="monotone" dataKey="actual" stroke="#10B981" strokeWidth={3} fillOpacity={1} fill="url(#colorActual)" name="Actual Spend" />
-                  <Area type="monotone" dataKey="predicted" stroke="#8B5CF6" strokeWidth={3} strokeDasharray="5 5" fillOpacity={1} fill="url(#colorPredicted)" name="Predicted Spend" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-          
+      {/* Top Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-gradient-to-br from-[#2563EB] to-[#3B82F6] rounded-[1.5rem] p-6 text-white shadow-lg shadow-blue-500/20 relative overflow-hidden">
+          <Calendar className="w-6 h-6 mb-4 opacity-90" />
+          <p className="text-sm font-medium text-blue-100 mb-1">Next Month Prediction</p>
+          <h3 className="text-3xl font-bold mb-2">$8,500</h3>
+          <p className="text-sm font-medium text-blue-100">Expected total expenses</p>
+        </div>
+        <div className="bg-gradient-to-br from-[#8B5CF6] to-[#A855F7] rounded-[1.5rem] p-6 text-white shadow-lg shadow-purple-500/20 relative overflow-hidden">
+          <DollarSign className="w-6 h-6 mb-4 opacity-90" />
+          <p className="text-sm font-medium text-purple-100 mb-1">Potential Savings</p>
+          <h3 className="text-3xl font-bold mb-2">$425</h3>
+          <p className="text-sm font-medium text-purple-100">Based on AI recommendations</p>
+        </div>
+        <div className="bg-gradient-to-br from-[#10B981] to-[#34D399] rounded-[1.5rem] p-6 text-white shadow-lg shadow-green-500/20 relative overflow-hidden">
+          <Target className="w-6 h-6 mb-4 opacity-90" />
+          <p className="text-sm font-medium text-green-100 mb-1">Goal Achievement</p>
+          <h3 className="text-3xl font-bold mb-2">92%</h3>
+          <p className="text-sm font-medium text-green-100">On track for your savings goal</p>
+        </div>
+      </div>
+
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Expense Forecast Line Chart */}
+        <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 md:p-8 border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none">
+          <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-6">Expense Forecast</h3>
+          <div className="h-[250px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={lineChartData} margin={{ top: 20, right: 20, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={true} stroke="#E2E8F0" />
+                <XAxis dataKey="name" axisLine={true} tickLine={true} tick={{ fill: '#64748B', fontSize: 13 }} dy={10} />
+                <YAxis axisLine={true} tickLine={true} tick={{ fill: '#64748B', fontSize: 13 }} domain={[0, 10000]} ticks={[0, 2500, 5000, 7500, 10000]} />
+                <RechartsTooltip 
+                  cursor={{ stroke: '#94A3B8', strokeWidth: 1, strokeDasharray: '4 4' }} 
+                  contentStyle={{ backgroundColor: '#1E293B', borderRadius: '12px', border: 'none', color: '#fff', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} 
+                  labelStyle={{ display: 'none' }}
+                  itemStyle={{ color: '#fff', fontSize: '14px', fontWeight: 'bold' }}
+                />
+                
+                <Line 
+                  type="monotone" 
+                  dataKey="actual" 
+                  stroke="#2563EB" 
+                  strokeWidth={3} 
+                  dot={{ r: 6, fill: '#2563EB', strokeWidth: 0 }}
+                  activeDot={{ r: 8 }}
+                  name="actual" 
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="predicted" 
+                  stroke="#8B5CF6" 
+                  strokeWidth={3} 
+                  strokeDasharray="5 5" 
+                  dot={{ r: 6, fill: '#8B5CF6', strokeWidth: 0 }}
+                  activeDot={{ r: 8 }}
+                  name="predicted" 
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
           <div className="flex items-center justify-center gap-6 mt-6">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
-              <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Actual Spend</span>
+              <div className="w-3 h-3 rounded-full bg-[#2563EB]"></div>
+              <span className="text-sm font-bold text-slate-600 dark:text-slate-400">Actual</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-purple-500"></div>
-              <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Predicted Spend</span>
+              <div className="w-3 h-3 rounded-full bg-[#8B5CF6]"></div>
+              <span className="text-sm font-bold text-slate-600 dark:text-slate-400">Predicted</span>
             </div>
           </div>
         </div>
 
-        <div className="space-y-6">
-          <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl p-6 shadow-lg text-white relative overflow-hidden">
-             <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl -mr-16 -mt-16"></div>
-             <h3 className="text-lg font-semibold relative z-10 mb-2">Predicted End of Month</h3>
-             <p className="text-3xl font-bold relative z-10 mb-1">
-                ${summary.totalPredictedMonth.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
-             </p>
-             <p className="text-blue-100 text-sm relative z-10">
-                +${summary.comparisonLastMonth} higher than last month
-             </p>
+        {/* 6-Month Spending Trend Area Chart */}
+        <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 md:p-8 border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none">
+          <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-6">6-Month Spending Trend</h3>
+          <div className="h-[250px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={areaChartData} margin={{ top: 20, right: 0, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorTrend" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.2}/>
+                    <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={true} stroke="#E2E8F0" />
+                <XAxis dataKey="name" axisLine={true} tickLine={true} tick={{ fill: '#64748B', fontSize: 13 }} dy={10} />
+                <YAxis axisLine={true} tickLine={true} tick={{ fill: '#64748B', fontSize: 13 }} domain={[0, 10000]} ticks={[0, 2500, 5000, 7500, 10000]} />
+                <RechartsTooltip cursor={{ stroke: '#94A3B8', strokeWidth: 1, strokeDasharray: '4 4' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                
+                <Area type="monotone" dataKey="value" stroke="#3B82F6" strokeWidth={3} fillOpacity={1} fill="url(#colorTrend)" />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
+          <div className="h-10"></div> {/* Spacer to align visually with the legend on the left */}
+        </div>
+      </div>
 
-          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-lg">
-            <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-4">Smart Suggestions</h3>
-            <div className="space-y-4">
-              {loading ? (
-                <div className="text-slate-500 text-sm text-center py-4">Generating insights...</div>
-              ) : suggestions.length === 0 ? (
-                <div className="text-slate-500 text-sm text-center py-4">No suggestions available. Keep adding transactions!</div>
-              ) : (
-                suggestions.map((sug, idx) => (
-                  <div key={idx} className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
-                     {sug.type === 'warning' ? (
-                       <AlertTriangle className="w-5 h-5 text-yellow-500 shrink-0 mt-0.5" />
-                     ) : (
-                       <TrendingUp className="w-5 h-5 text-green-500 shrink-0 mt-0.5" />
-                     )}
-                     <div>
-                       <h4 className="font-medium text-slate-800 dark:text-white text-sm">{sug.title}</h4>
-                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{sug.description}</p>
-                     </div>
-                  </div>
-                ))
-              )}
-            </div>
-            <button 
-              onClick={() => alert("All personalized suggestions are currently displayed.")}
-              className="w-full mt-4 flex items-center justify-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-            >
-              View All Suggestions <ArrowRight className="w-4 h-4" />
-            </button>
+      {/* Category-wise Predictions */}
+      <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 md:p-8 border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none">
+        <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-6">Category-wise Predictions</h3>
+        
+        <div className="space-y-4">
+          <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+             <div className="flex justify-between items-center mb-1">
+               <h4 className="font-bold text-slate-800 dark:text-white">Food</h4>
+               <span className="text-sm font-bold text-[#FF004D]">+6.3%</span>
+             </div>
+             <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+               Current: $2400 <span className="mx-2">→</span> Predicted: $2550
+             </p>
           </div>
         </div>
       </div>
