@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { Download, FileText, TrendingUp, TrendingDown, DollarSign, Target, Calendar } from 'lucide-react';
+import { Download, TrendingUp, TrendingDown, DollarSign, Target, Calendar, Check, ChevronDown } from 'lucide-react';
 import api from '../api';
+import { jsPDF } from "jspdf";
+import "jspdf-autotable";
 
 const MetricCard = ({ title, value, trend, isPositive, trendText, icon: Icon, iconColorClass, iconBgClass }) => (
   <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none">
@@ -18,6 +20,11 @@ const MetricCard = ({ title, value, trend, isPositive, trendText, icon: Icon, ic
 
 const Reports = () => {
   const [loading, setLoading] = useState(true);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [selectedRange, setSelectedRange] = useState('This Month');
+  const dropdownRef = useRef(null);
+
+  const ranges = ['This Month', 'Last Month', 'Last 3 Months', 'Last 6 Months', 'This Year', 'Custom Range'];
 
   // Mock data to match Figma exactly
   const barChartData = [
@@ -39,7 +46,71 @@ const Reports = () => {
   useEffect(() => {
     // Keeping dummy matching Figma for visual perfection.
     setLoading(false);
+
+    // Click outside handler for dropdown
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const handleDownloadCSV = () => {
+    const headers = ['Month', 'Income', 'Expenses', 'Savings'];
+    const rows = barChartData.map(item => [item.name, item.income, item.expenses, item.savings]);
+    const csvContent = [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `smartspend_report_${selectedRange.replace(/ /g, '_').toLowerCase()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleDownloadPDF = () => {
+    const doc = new jsPDF();
+    
+    doc.setFontSize(20);
+    doc.setTextColor(30, 41, 59);
+    doc.text('SmartSpend Financial Report', 14, 22);
+    
+    doc.setFontSize(11);
+    doc.setTextColor(100, 116, 139);
+    doc.text(`Report Period: ${selectedRange}`, 14, 30);
+    
+    doc.setFontSize(12);
+    doc.setTextColor(30, 41, 59);
+    doc.text('Summary Metrics:', 14, 45);
+    
+    doc.setFontSize(10);
+    doc.text(`Total Income: $12,450`, 14, 52);
+    doc.text(`Total Expenses: $8,320`, 14, 58);
+    doc.text(`Total Savings: $4,130`, 14, 64);
+    doc.text(`Savings Rate: 33.2%`, 14, 70);
+
+    const tableColumn = ["Month", "Income ($)", "Expenses ($)", "Savings ($)"];
+    const tableRows = barChartData.map(item => [
+      item.name,
+      item.income.toLocaleString(),
+      item.expenses.toLocaleString(),
+      item.savings.toLocaleString()
+    ]);
+
+    doc.autoTable({
+      head: [tableColumn],
+      body: tableRows,
+      startY: 85,
+      theme: 'striped',
+      headStyles: { fillColor: [79, 70, 229] },
+    });
+
+    doc.save(`smartspend_report_${selectedRange.replace(/ /g, '_').toLowerCase()}.pdf`);
+  };
 
   const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, name }) => {
     const radius = outerRadius * 1.4;
@@ -71,11 +142,13 @@ const Reports = () => {
         </div>
         <div className="flex gap-3">
           <button 
+            onClick={handleDownloadPDF}
             className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white px-5 py-2.5 rounded-xl shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors font-bold text-sm"
           >
             <Download className="w-4 h-4" /> PDF
           </button>
           <button 
+            onClick={handleDownloadCSV}
             className="flex items-center gap-2 bg-[#4F46E5] text-white px-5 py-2.5 rounded-xl shadow-md shadow-indigo-500/30 hover:opacity-90 transition-opacity font-bold text-sm"
           >
             <Download className="w-4 h-4" /> CSV
@@ -124,13 +197,41 @@ const Reports = () => {
       </div>
 
       {/* Date Filter Dropdown */}
-      <div className="bg-white dark:bg-slate-900 rounded-[1.5rem] p-4 border border-slate-100 dark:border-slate-800 shadow-sm w-max flex items-center gap-3">
-        <Calendar className="w-5 h-5 text-slate-400" />
-        <select className="bg-transparent border-none text-slate-800 dark:text-white font-bold focus:outline-none cursor-pointer pr-4 appearance-none outline-none">
-          <option>This Month</option>
-          <option>Last Month</option>
-          <option>This Year</option>
-        </select>
+      <div className="relative w-max" ref={dropdownRef}>
+        <div 
+          onClick={() => setDropdownOpen(!dropdownOpen)}
+          className="bg-white dark:bg-slate-900 rounded-[1.5rem] p-4 border border-slate-100 dark:border-slate-800 shadow-sm flex items-center gap-3 cursor-pointer"
+        >
+          <Calendar className="w-5 h-5 text-slate-400" />
+          <span className="text-slate-800 dark:text-white font-bold pr-6 select-none">
+            {selectedRange}
+          </span>
+          <ChevronDown className="w-4 h-4 text-slate-400 absolute right-4" />
+        </div>
+        
+        {dropdownOpen && (
+          <div className="absolute top-[calc(100%+8px)] left-0 w-[200px] bg-[#334155] rounded-xl shadow-2xl py-2 z-50 overflow-hidden border border-slate-600/50">
+            {ranges.map((range) => (
+              <div 
+                key={range}
+                onClick={() => {
+                  setSelectedRange(range);
+                  setDropdownOpen(false);
+                }}
+                className={`flex items-center gap-2 px-4 py-2.5 cursor-pointer text-sm font-medium transition-colors ${
+                  selectedRange === range 
+                  ? 'bg-[#3B82F6] text-white' 
+                  : 'text-slate-300 hover:bg-slate-700/50 hover:text-white'
+                }`}
+              >
+                <div className="w-4 flex justify-center shrink-0">
+                  {selectedRange === range && <Check className="w-4 h-4 text-white" />}
+                </div>
+                {range}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Charts 2-Column Grid */}
