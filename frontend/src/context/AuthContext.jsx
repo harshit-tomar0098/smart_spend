@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useCallback } from 'react';
 /* eslint-disable react-refresh/only-export-components, react-hooks/set-state-in-effect */
 import api from '../api';
 
@@ -45,11 +45,38 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
-  };
+  }, []);
+
+  // Idle timeout auto-logout mechanism
+  useEffect(() => {
+    let timeoutId;
+
+    const resetTimer = () => {
+      clearTimeout(timeoutId);
+      if (user) {
+        // 2 minutes = 120,000 milliseconds
+        timeoutId = setTimeout(() => {
+          logout();
+        }, 120000);
+      }
+    };
+
+    const events = ['mousemove', 'keydown', 'scroll', 'click'];
+
+    if (user) {
+      resetTimer();
+      events.forEach(event => window.addEventListener(event, resetTimer));
+    }
+
+    return () => {
+      clearTimeout(timeoutId);
+      events.forEach(event => window.removeEventListener(event, resetTimer));
+    };
+  }, [user, logout]);
 
   return (
     <AuthContext.Provider value={{ user, login, register, logout, loading }}>
